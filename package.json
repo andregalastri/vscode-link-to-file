@@ -1,0 +1,72 @@
+{
+  "name": "link-file-extension",
+  "displayName": "Link File Extension",
+  "description": "Open files in project directory using LINK: comments",
+  "version": "1.0.0",
+  "publisher": "your-name",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "repository": {"url": "https://github.com/gdarcan/vscode-link-to-file"},
+  "activationEvents": [
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:python",
+    "onLanguage:markdown",
+    "onLanguage:html",
+    "onLanguage:css",
+    "onLanguage:plaintext",
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "link-file-extension.openFile",
+        "title": "Open Linked File"
+      }
+    ],
+    "configuration": {
+      "title": "Link File Extension",
+      "properties": {
+        "link-file-extension.linkColor": {
+          "type": "string",
+          "format": "color",
+          "default": "#000000",
+          "description": "Color of the link text"
+        },
+        "link-file-extension.linkBackgroundColor": {
+          "type": "string",
+          "format": "color",
+          "default": "#ffffff",
+          "description": "Background color of the link"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "webpack": "webpack --mode development",
+    "webpack-watch": "webpack --mode development --watch"
+  },
+  "devDependencies": {
+    "@types/node": "^16.x",
+    "@types/vscode": "^1.75.0",
+    "@typescript-eslint/eslint-plugin": "^5.x",
+    "@typescript-eslint/parser": "^5.x",
+    "eslint": "^8.x",
+    "ts-loader": "^9.x",
+    "typescript": "^4.x",
+    "webpack": "^5.x",
+    "webpack-cli": "^5.x"
+  }
+}
