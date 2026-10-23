@@ -18,8 +18,7 @@ export function activate(context: vscode.ExtensionContext) {
   let linkDecoration = vscode.window.createTextEditorDecorationType({
     backgroundColor: vscode.workspace.getConfiguration('galastri-link-to-file').get('linkBackgroundColor'),
     color: vscode.workspace.getConfiguration('galastri-link-to-file').get('linkColor'),
-    textDecoration: 'underline',
-    cursor: 'pointer'
+    textDecoration: 'underline'
   });
 
   // Function to recreate decoration with new settings
@@ -29,8 +28,7 @@ export function activate(context: vscode.ExtensionContext) {
     linkDecoration = vscode.window.createTextEditorDecorationType({
       backgroundColor: config.get('linkBackgroundColor'),
       color: config.get('linkColor'),
-      textDecoration: 'underline',
-      cursor: 'pointer'
+      textDecoration: 'underline'
     });
   };
 
