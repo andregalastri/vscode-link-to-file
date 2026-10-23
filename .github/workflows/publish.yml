@@ -1,0 +1,36 @@
+name: Package personal VSIX
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'test/**'
+      - 'package*.json'
+      - '.vscodeignore'
+      - '.github/workflows/publish.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run package
+      - name: Install Windows smoke test launcher
+        run: npm install --no-save --package-lock=false @vscode/test-electron@2.5.2
+      - run: npm run test:windows
+      - run: npm run package:vsix
+      - uses: actions/upload-artifact@v4
+        with:
+          name: galastri-link-to-file-vsix
+          path: galastri-link-to-file-*.vsix
+          if-no-files-found: error

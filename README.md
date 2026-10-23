@@ -1,4 +1,4 @@
-# Link File Extension
+# Galastri Link to File
 
 A VS Code extension that makes file links in comments clickable and underlined.
 
@@ -6,7 +6,8 @@ A VS Code extension that makes file links in comments clickable and underlined.
 
 - Detects `LINK:` references in any comment format
 - Underlines valid file paths that exist in your project
-- Shows a code lens "Open file" action
+- Optional "Open File" action above each link
+- Native clickable links, using the same modifier as VS Code's external links
 - Supports all file types: text files, images (PNG, JPG, etc.), PDFs, and binary files
 - Opens files with appropriate viewer (text editor, image viewer, etc.)
 - Supports all languages (JavaScript, TypeScript, Python, Markdown, HTML, CSS, and more)
@@ -41,15 +42,21 @@ The extension recognizes the following patterns:
 
 3. Hover over the link to see if the file exists
 
-4. Click the **"Open file"** code lens action that appears above the link
+4. Ctrl+click the path, or click the **"Open File"** action above it. If
+   `editor.multiCursorModifier` is `ctrlCmd`, VS Code uses Alt+click instead.
 
 5. The file will open in VS Code
 
 ## Installation
 
-1. Copy this folder to your extensions directory or install from VS Code marketplace
-2. Reload VS Code
-3. The extension will activate automatically
+1. Disable or uninstall the original Link to File extension to avoid duplicate actions.
+2. Download `galastri-link-to-file-vsix` from the latest successful GitHub Actions run
+   and extract `galastri-link-to-file-1.0.1.vsix` from the ZIP.
+3. In VS Code, run **Extensions: Install from VSIX...** and select that file.
+
+The **Package personal VSIX** workflow is based on the personal Ataula workflow.
+It runs on Windows only, checks the two settings and file opening in VS Code,
+and packages the extension. It can also be started with **Run workflow**.
 
 ## Installation from Source
 
@@ -64,7 +71,7 @@ npm run compile
 npm run watch
 
 # Package as VSIX
-npm run package
+npm run package:vsix
 ```
 
 ## Extension Settings
@@ -75,19 +82,24 @@ You can customize the appearance of link highlighting in VS Code settings:
 
 ```json
 {
-  "link-file-extension.linkColor": "#000000",
-  "link-file-extension.linkBackgroundColor": "#ffffff"
+  "galastri-link-to-file.showOpenFile": true,
+  "galastri-link-to-file.allowClickToFollowLink": true,
+  "galastri-link-to-file.linkColor": "#000000",
+  "galastri-link-to-file.linkBackgroundColor": "#ffffff"
 }
 ```
 
+- `showOpenFile`: Show 'Open File' above the link (default: `true`).
+- `allowClickToFollowLink`: Allow clicking to follow the link (default: `true`).
+  Uses VS Code's native Ctrl+click / Alt+click behavior. Independent of `showOpenFile`.
 - `linkColor`: Text color of the links (default: `#000000` - black)
 - `linkBackgroundColor`: Background color of the links (default: `#ffffff` - white)
 
 Example - highlight links in yellow:
 ```json
 {
-  "link-file-extension.linkColor": "#000000",
-  "link-file-extension.linkBackgroundColor": "#ffff00"
+  "galastri-link-to-file.linkColor": "#000000",
+  "galastri-link-to-file.linkBackgroundColor": "#ffff00"
 }
 ```
 
@@ -101,7 +113,7 @@ Example - highlight links in yellow:
 
 - TypeScript source in `src/extension.ts`
 - See `package.json` for available npm scripts
-- Tests can be added in a `test/` folder
+- A short Windows smoke test is in `test/` and runs through GitHub Actions.
 
 ## License
 

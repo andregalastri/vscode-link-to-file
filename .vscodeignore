@@ -1,0 +1,11 @@
+.github/**
+.vscode*/**
+node_modules/**
+src/**
+test/**
+tsconfig.json
+webpack.config.js
+package-lock.json
+.gitignore
+dist/*.map
+dist/*.d.ts

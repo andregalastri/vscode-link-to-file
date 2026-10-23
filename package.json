@@ -1,16 +1,19 @@
 {
-  "name": "link-file-extension",
-  "displayName": "Link File Extension",
+  "name": "galastri-link-to-file",
+  "displayName": "Galastri Link to File",
   "description": "Open files in project directory using LINK: comments",
-  "version": "1.0.0",
-  "publisher": "your-name",
+  "version": "1.0.1",
+  "publisher": "andregalastri",
   "engines": {
     "vscode": "^1.75.0"
   },
   "categories": [
     "Other"
   ],
-  "repository": {"url": "https://github.com/gdarcan/vscode-link-to-file"},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andregalastri/vscode-link-to-file"
+  },
   "activationEvents": [
     "onLanguage:javascript",
     "onLanguage:typescript",
@@ -25,24 +28,35 @@
   "contributes": {
     "commands": [
       {
-        "command": "link-file-extension.openFile",
+        "command": "galastri-link-to-file.openFile",
         "title": "Open Linked File"
       }
     ],
     "configuration": {
-      "title": "Link File Extension",
+      "title": "Galastri Link to File",
       "properties": {
-        "link-file-extension.linkColor": {
+        "galastri-link-to-file.linkColor": {
           "type": "string",
           "format": "color",
           "default": "#000000",
           "description": "Color of the link text"
         },
-        "link-file-extension.linkBackgroundColor": {
+        "galastri-link-to-file.linkBackgroundColor": {
           "type": "string",
           "format": "color",
           "default": "#ffffff",
           "description": "Background color of the link"
+        },
+        "galastri-link-to-file.showOpenFile": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show 'Open File' above the link"
+        },
+        "galastri-link-to-file.allowClickToFollowLink": {
+          "type": "boolean",
+          "default": true,
+          "description": "Allow clicking to follow the link",
+          "markdownDescription": "Allow clicking to follow the link using VS Code's native modifier (Ctrl+click or Alt+click, according to `editor.multiCursorModifier`)."
         }
       }
     }
@@ -56,7 +70,9 @@
     "test": "node ./out/test/runTest.js",
     "package": "webpack --mode production --devtool hidden-source-map",
     "webpack": "webpack --mode development",
-    "webpack-watch": "webpack --mode development --watch"
+    "webpack-watch": "webpack --mode development --watch",
+    "test:windows": "node test/run.cjs",
+    "package:vsix": "npx --yes @vscode/vsce package --no-dependencies"
   },
   "devDependencies": {
     "@types/node": "^16.x",
@@ -68,5 +84,6 @@
     "typescript": "^4.x",
     "webpack": "^5.x",
     "webpack-cli": "^5.x"
-  }
+  },
+  "license": "MIT"
 }

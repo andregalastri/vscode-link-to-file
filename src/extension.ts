@@ -12,17 +12,12 @@ interface LinkMatch {
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log('Link File Extension is now active');
-
-  // Track active decorations
-  const decorationMap = new Map<string, vscode.Range[]>();
-  const linksCache = new Map<string, LinkMatch[]>();
-  const linkRanges = new Map<string, LinkMatch[]>();
+  console.log('Galastri Link to File is now active');
 
   // Create decoration for underlining valid links
   let linkDecoration = vscode.window.createTextEditorDecorationType({
-    backgroundColor: vscode.workspace.getConfiguration('link-file-extension').get('linkBackgroundColor'),
-    color: vscode.workspace.getConfiguration('link-file-extension').get('linkColor'),
+    backgroundColor: vscode.workspace.getConfiguration('galastri-link-to-file').get('linkBackgroundColor'),
+    color: vscode.workspace.getConfiguration('galastri-link-to-file').get('linkColor'),
     textDecoration: 'underline',
     cursor: 'pointer'
   });
@@ -30,7 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Function to recreate decoration with new settings
   const recreateDecoration = () => {
     linkDecoration.dispose();
-    const config = vscode.workspace.getConfiguration('link-file-extension');
+    const config = vscode.workspace.getConfiguration('galastri-link-to-file');
     linkDecoration = vscode.window.createTextEditorDecorationType({
       backgroundColor: config.get('linkBackgroundColor'),
       color: config.get('linkColor'),
@@ -38,10 +33,6 @@ export function activate(context: vscode.ExtensionContext) {
       cursor: 'pointer'
     });
   };
-
-  // Prevent recursive file opening
-  let lastOpenedFilePath: string | null = null;
-  let lastOpenTime: number = 0;
 
   // Provider for code lens
   const codeLensProvider = new LinkCodeLensProvider();
@@ -54,14 +45,32 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
+  // Native document links use the same modifier as VS Code's external links.
+  const documentLinkProvider = new LinkDocumentLinkProvider();
+  let documentLinkRegistration: vscode.Disposable;
+
+  function registerDocumentLinks() {
+    if (documentLinkRegistration) {
+      documentLinkRegistration.dispose();
+    }
+    documentLinkRegistration = vscode.languages.registerDocumentLinkProvider(
+      { scheme: 'file' },
+      documentLinkProvider
+    );
+  }
+
+  registerDocumentLinks();
+  context.subscriptions.push(
+    codeLensProvider,
+    { dispose() { documentLinkRegistration.dispose(); } }
+  );
+
   // Command to open the linked file
   const openFileCommand = vscode.commands.registerCommand(
-    'link-file-extension.openFile',
+    'galastri-link-to-file.openFile',
     async (filePath: string) => {
       try {
         const uri = vscode.Uri.file(filePath);
-        lastOpenedFilePath = filePath;
-        lastOpenTime = Date.now();
         // Use vscode.open command which intelligently handles all file types
         // (text files, images, binary files, etc.)
         await vscode.commands.executeCommand('vscode.open', uri);
@@ -91,15 +100,8 @@ export function activate(context: vscode.ExtensionContext) {
     // Update decorations
     editor.setDecorations(linkDecoration, validRanges);
 
-    // Store for later reference
-    decorationMap.set(document.uri.fsPath, validRanges);
-
-    // Cache links for click detection
-    linksCache.set(document.uri.fsPath, links);
-    linkRanges.set(document.uri.fsPath, links);
-
     // Update code lens provider
-    codeLensProvider.setLinks(document.uri.fsPath, links);
+    codeLensProvider.refresh();
   };
 
   // Update decorations on document open and change
@@ -113,9 +115,12 @@ export function activate(context: vscode.ExtensionContext) {
       }
     }),
     vscode.workspace.onDidChangeConfiguration((event) => {
-      if (event.affectsConfiguration('link-file-extension')) {
+      if (event.affectsConfiguration('galastri-link-to-file')) {
         recreateDecoration();
         updateDecorations();
+        if (event.affectsConfiguration('galastri-link-to-file.allowClickToFollowLink')) {
+          registerDocumentLinks();
+        }
       }
     })
   );
@@ -184,13 +189,11 @@ function findLinks(text: string, document: vscode.TextDocument): LinkMatch[] {
 }
 
 class LinkCodeLensProvider implements vscode.CodeLensProvider {
-  private linksMap = new Map<string, LinkMatch[]>();
   private onDidChangeCodeLensesEmitter = new vscode.EventEmitter<void>();
 
   readonly onDidChangeCodeLenses = this.onDidChangeCodeLensesEmitter.event;
 
-  setLinks(documentPath: string, links: LinkMatch[]) {
-    this.linksMap.set(documentPath, links);
+  refresh() {
     this.onDidChangeCodeLensesEmitter.fire();
   }
 
@@ -198,17 +201,25 @@ class LinkCodeLensProvider implements vscode.CodeLensProvider {
     document: vscode.TextDocument,
     token: vscode.CancellationToken
   ): vscode.CodeLens[] {
-    const links = this.linksMap.get(document.uri.fsPath) || [];
+    const config = vscode.workspace.getConfiguration('galastri-link-to-file', document.uri);
+    if (!config.get<boolean>('showOpenFile', true)) {
+      return [];
+    }
+    const links = findLinks(document.getText(), document);
     return links
       .filter(link => link.exists)
       .map(link => {
         const command: vscode.Command = {
           title: 'Open File',
-          command: 'link-file-extension.openFile',
+          command: 'galastri-link-to-file.openFile',
           arguments: [link.fullPath]
         };
         return new vscode.CodeLens(link.range, command);
       });
+  }
+
+  dispose() {
+    this.onDidChangeCodeLensesEmitter.dispose();
   }
 
   resolveCodeLens(
@@ -217,6 +228,25 @@ class LinkCodeLensProvider implements vscode.CodeLensProvider {
   ): vscode.CodeLens {
     return codeLens;
   }
+}
+
+class LinkDocumentLinkProvider implements vscode.DocumentLinkProvider {
+  provideDocumentLinks(document: vscode.TextDocument): vscode.DocumentLink[] {
+    const config = vscode.workspace.getConfiguration('galastri-link-to-file', document.uri);
+    if (!config.get<boolean>('allowClickToFollowLink', true)) {
+      return [];
+    }
+
+    const documentLinks: vscode.DocumentLink[] = [];
+    const links = findLinks(document.getText(), document);
+    for (const link of links) {
+      if (link.exists) {
+        documentLinks.push(new vscode.DocumentLink(link.range, vscode.Uri.file(link.fullPath)));
+      }
+    }
+    return documentLinks;
+  }
+
 }
 
 export function deactivate() {}
